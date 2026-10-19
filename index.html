@@ -1,0 +1,1724 @@
+<!DOCTYPE html>
+<html lang="ru" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>ТОВАРКА // БИЗНЕС СИМУЛЯТОР</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&display=swap');
+
+        :root[data-theme="dark"] {
+            --bg-base: #121212;
+            --bg-card: #1E1E24;
+            --text-main: #E1E1E6;
+            --text-muted: #8E8E9A;
+            --accent-green: #00C853;
+            --accent-yellow: #FFB800;
+            --accent-red: #FF3D00;
+            --accent-blue: #00D2FF;
+            --border-color: #2A2A35;
+            --header-bg: linear-gradient(135deg, #18181f, #252530);
+        }
+
+        :root[data-theme="light"] {
+            --bg-base: #f0f2f5;
+            --bg-card: #ffffff;
+            --text-main: #1a1a1a;
+            --text-muted: #757575;
+            --accent-green: #2ecc71;
+            --accent-yellow: #d4ac0d;
+            --accent-red: #e74c3c;
+            --accent-blue: #3498db;
+            --border-color: #e4e6eb;
+            --header-bg: linear-gradient(135deg, #1e272e, #485460);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-user-select: none;
+            font-family: 'Montserrat', sans-serif;
+            transition: background-color 0.2s, color 0.2s, border-color 0.2s;
+        }
+
+        body, html {
+            width: 100%;
+            height: 100%;
+            background-color: var(--bg-base);
+            color: var(--text-main);
+            overflow: hidden;
+        }
+
+        .screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: none;
+            opacity: 0;
+            transition: opacity 0.25s ease-in-out;
+        }
+
+        .screen.active {
+            display: flex;
+            opacity: 1;
+        }
+
+        .game-container {
+            display: none;
+            flex-direction: column;
+            height: 100%;
+            max-width: 480px;
+            margin: 0 auto;
+            padding: 12px;
+            gap: 10px;
+            opacity: 0;
+            transition: opacity 0.3s ease-in-out;
+        }
+
+        .game-container.visible {
+            display: flex;
+            opacity: 1;
+        }
+
+        .menu-wrapper {
+            width: 100%;
+            max-width: 400px;
+            margin: auto;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+            text-align: center;
+            background: var(--bg-card);
+            border-radius: 20px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+        }
+
+        .terminal-brand h1 {
+            font-size: 36px;
+            font-weight: 800;
+            color: var(--text-main);
+            margin-bottom: 4px;
+            letter-spacing: 1px;
+        }
+
+        .terminal-subtitle {
+            font-size: 11px;
+            color: var(--text-muted);
+            font-weight: 600;
+            letter-spacing: 1px;
+        }
+
+        .menu-options {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--header-bg);
+            color: #fff;
+            padding: 12px 16px;
+            border-radius: 14px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .stat-group {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .stat-group .label {
+            font-size: 9px;
+            color: #d2d2d2;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .stat-group .value {
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .accent-num { color: var(--accent-yellow); }
+
+        .top-controls {
+            display: flex;
+            gap: 6px;
+        }
+
+        .icon-top-btn {
+            background: rgba(255,255,255,0.15);
+            border: none;
+            color: #fff;
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .icon-top-btn svg {
+            width: 20px;
+            height: 20px;
+            fill: #fff;
+        }
+
+        .badge-dot {
+            position: absolute;
+            top: 6px;
+            right: 6px;
+            width: 8px;
+            height: 8px;
+            background-color: var(--accent-green);
+            border-radius: 50%;
+            display: none;
+        }
+
+        .viewport {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .tab-pane {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: none;
+            flex-direction: column;
+            gap: 10px;
+            overflow-y: auto;
+            padding-bottom: 10px;
+            opacity: 0;
+            transform: translateX(30px);
+            transition: opacity 0.25s ease-in-out, transform 0.25s ease-in-out;
+        }
+
+        .tab-pane.active {
+            display: flex;
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .pane-header {
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--text-muted);
+            padding: 4px 2px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .feed-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .shop-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 14px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+        }
+
+        .shop-card.featured-market {
+            border: 2px solid var(--accent-blue);
+            background: linear-gradient(135deg, var(--bg-card), rgba(0, 210, 255, 0.03));
+            padding: 18px;
+        }
+
+        .card-icon-box {
+            width: 52px;
+            height: 52px;
+            border-radius: 12px;
+            background: var(--bg-base);
+            border: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            overflow: hidden;
+        }
+
+        .card-icon-box svg {
+            width: 28px;
+            height: 28px;
+            fill: var(--accent-blue);
+        }
+
+        .card-info {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+
+        .card-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        .card-desc {
+            font-size: 11px;
+            color: var(--text-muted);
+            line-height: 1.3;
+        }
+
+        .card-price {
+            font-size: 15px;
+            font-weight: 800;
+            color: var(--accent-yellow);
+        }
+
+        .card-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .console-log {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            padding: 12px;
+            border-radius: 12px;
+            font-size: 11px;
+            color: var(--text-muted);
+            max-height: 140px;
+            overflow-y: auto;
+            line-height: 1.5;
+        }
+
+        .btn {
+            padding: 10px 14px;
+            border: none;
+            border-radius: 10px;
+            font-size: 11px;
+            font-weight: 700;
+            cursor: pointer;
+            text-align: center;
+            transition: filter 0.15s;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            filter: grayscale(1);
+        }
+
+        .btn:active:not(:disabled) { filter: brightness(0.85); }
+        .btn-primary { background: var(--accent-blue); color: #fff; }
+        .btn-success { background: var(--accent-green); color: #fff; }
+        .btn-secondary { background: var(--bg-base); border: 1px solid var(--border-color); color: var(--text-main); }
+        .btn-danger { background: var(--accent-red); color: #fff; }
+
+        .nav-bar {
+            display: flex;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 -4px 20px rgba(0,0,0,0.1);
+            padding: 8px;
+            gap: 6px;
+        }
+
+        .nav-tab {
+            flex: 1;
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 12px;
+            font-weight: 800;
+            padding: 18px 4px;
+            cursor: pointer;
+            border-radius: 14px;
+            transition: all 0.2s;
+            text-align: center;
+        }
+
+        .nav-tab.market-main {
+            color: var(--accent-blue);
+        }
+
+        .nav-tab.active {
+            color: #fff;
+            background: var(--accent-blue);
+            box-shadow: 0 4px 14px rgba(0, 210, 255, 0.35);
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(4px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            padding: 16px;
+            z-index: 100;
+        }
+
+        .modal-box {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            padding: 24px;
+            border-radius: 20px;
+            width: 100%;
+            max-width: 360px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .modal-box input {
+            background: var(--bg-base);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            padding: 12px;
+            font-size: 14px;
+            border-radius: 10px;
+            outline: none;
+        }
+
+        #toastNotification {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-120px);
+            background: var(--bg-card);
+            border: 1px solid var(--accent-blue);
+            padding: 12px 18px;
+            border-radius: 14px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            z-index: 200;
+            max-width: 90%;
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            cursor: pointer;
+        }
+        #toastNotification.show {
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .chat-box {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            width: 100%;
+            max-width: 420px;
+            height: 80vh;
+            border-radius: 20px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .chat-header {
+            background: var(--bg-base);
+            padding: 14px 18px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .buyer-name { font-size: 13px; font-weight: 700; color: var(--text-main); }
+        .buyer-tag { font-size: 9px; color: var(--accent-blue); font-weight: 600; letter-spacing: 0.5px; }
+
+        .chat-messages {
+            flex: 1;
+            padding: 16px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            background: var(--bg-base);
+        }
+
+        .msg {
+            max-width: 85%;
+            padding: 12px 14px;
+            border-radius: 14px;
+            font-size: 12px;
+            line-height: 1.4;
+        }
+
+        .msg.buyer {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            align-self: flex-start;
+            border-bottom-left-radius: 4px;
+        }
+
+        .msg.seller {
+            background: var(--accent-blue);
+            color: #fff;
+            align-self: flex-end;
+            border-bottom-right-radius: 4px;
+        }
+
+        .msg.system {
+            align-self: center;
+            font-size: 10px;
+            color: var(--text-muted);
+            background: none;
+        }
+
+        .chat-controls {
+            padding: 14px;
+            background: var(--bg-card);
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .reply-btn {
+            background: var(--bg-base);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            padding: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            text-align: left;
+            border-radius: 10px;
+            cursor: pointer;
+        }
+        .reply-btn:active { filter: brightness(0.9); }
+    </style>
+</head>
+<body>
+
+    <!-- ВСПЛЫВАЮЩЕЕ УВЕДОМЛЕНИЕ -->
+    <div id="toastNotification" onclick="openPeligramModal()">
+        <div style="width: 24px; height: 24px; fill: var(--accent-blue);">
+            <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+        </div>
+        <div style="flex:1;">
+            <div style="font-size: 9px; font-weight:700; color:var(--accent-blue);">ПЕЛИГРАМ // СООБЩЕНИЕ</div>
+            <div id="toastText" style="font-size: 11px; font-weight:600;">Вам написал покупатель!</div>
+        </div>
+    </div>
+
+    <!-- СТАРТОВОЕ МЕНЮ -->
+    <div id="screen-menu" class="screen active">
+        <div class="menu-wrapper">
+            <div class="terminal-brand">
+                <h1>ТОВАРКА</h1>
+                <div class="terminal-subtitle">БИЗНЕС СИМУЛЯТОР // v6.26</div>
+            </div>
+            <div class="menu-options" id="menuOptionsContainer"></div>
+        </div>
+    </div>
+
+    <!-- ИГРОВОЙ ИНТЕРФЕЙС -->
+    <div id="game-interface" class="game-container">
+        <header class="status-bar">
+            <div class="stat-group">
+                <span class="label">КАПИТАЛ</span>
+                <span class="value accent-num" id="balance">12,000 ₽</span>
+            </div>
+            <div class="stat-group">
+                <span class="label">ДЕНЬ</span>
+                <span class="value" id="day">1</span>
+            </div>
+            <div class="stat-group">
+                <span class="label">СТАТУС</span>
+                <span class="value" id="statusLevel">ПЕРЕКУП</span>
+            </div>
+            <div class="top-controls">
+                <button class="icon-top-btn" onclick="playSound('click'); openPeligramModal()" title="Пелиграм">
+                    <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+                    <span id="peligramBadge" class="badge-dot"></span>
+                </button>
+            </div>
+        </header>
+
+        <main class="viewport" id="viewportArea">
+            <div id="tab-market" class="tab-pane active" data-tab-index="0">
+                <div class="pane-header">Главный рынок закупки товаров</div>
+                <div id="market-list" class="feed-list"></div>
+            </div>
+
+            <div id="tab-cars" class="tab-pane" data-tab-index="1">
+                <div class="pane-header">Автосалон / Б/У Авто</div>
+                <div id="cars-list" class="feed-list"></div>
+            </div>
+
+            <div id="tab-apartments" class="tab-pane" data-tab-index="2">
+                <div class="pane-header">Недвижимость и квартиры</div>
+                <div id="apartments-list" class="feed-list"></div>
+            </div>
+
+            <div id="tab-listings" class="tab-pane" data-tab-index="3">
+                <div class="pane-header">Мои объявления (<span id="listings-count">0</span>)</div>
+                <div id="listings-list" class="feed-list"></div>
+            </div>
+
+            <div id="tab-inventory" class="tab-pane" data-tab-index="4">
+                <div class="pane-header">Склад / Гараж (<span id="inv-count">0</span>)</div>
+                <div id="inventory-list" class="feed-list"></div>
+            </div>
+
+            <div id="tab-office" class="tab-pane" data-tab-index="5">
+                <div class="pane-header">Управление бизнесом</div>
+
+                <div class="shop-card featured-market">
+                    <div class="card-icon-box">
+                        <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-2 10h-4v4h-2v-4H7v-2h4V7h2v4h4v2z"/></svg>
+                    </div>
+                    <div class="card-info">
+                        <div class="card-title" id="businessTitle">Коммерческий Бизнес</div>
+                        <div class="card-desc" id="businessDesc">Статус: Закрыт. Требуется 100,000 ₽.</div>
+                    </div>
+                    <button class="btn btn-success" id="openBusinessBtn" onclick="playSound('cash'); handleBusinessAction()">Открыть (100k ₽)</button>
+                </div>
+
+                <div class="shop-card">
+                    <div class="card-icon-box">
+                        <svg viewBox="0 0 24 24"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/></svg>
+                    </div>
+                    <div class="card-info">
+                        <div class="card-title">Суточный цикл</div>
+                        <div class="card-desc">Завершить день, обновить рынок и получить прибыль.</div>
+                    </div>
+                    <button class="btn btn-primary" onclick="playSound('click'); nextDay()">Новый день</button>
+                </div>
+
+                <div class="shop-card">
+                    <div class="card-icon-box">
+                        <svg viewBox="0 0 24 24"><path d="M4 10h3v7H4zM10.5 10h3v7h-3zM17 10h3v7h-3zM19 4H5c-1.1 0-2 .9-2 2v2h18V6c0-1.1-.9-2-2-2zm1 14H4v1c0 .55.45 1 1 1h14c.55 0 1-.45 1-1v-1z"/></svg>
+                    </div>
+                    <div class="card-info">
+                        <div class="card-title">Банковский заём</div>
+                        <div class="card-desc" id="creditDesc">Доступно: 15,000 ₽ (возврат 19,000 ₽).</div>
+                    </div>
+                    <button class="btn btn-secondary" id="creditBtn" onclick="playSound('click'); handleCreditAction()">Взять</button>
+                </div>
+
+                <div class="pane-header" style="margin-top: 6px;">Системные настройки</div>
+                <div class="shop-card">
+                    <div class="card-icon-box">
+                        <svg viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.04.64.09.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
+                    </div>
+                    <div class="card-info">
+                        <div class="card-title">Параметры игры</div>
+                        <div class="card-desc">Тема, звук, музыка и сброс прогресса.</div>
+                    </div>
+                    <button class="btn btn-secondary" onclick="playSound('click'); openSettingsModal()">Открыть</button>
+                </div>
+
+                <div class="pane-header" style="margin-top: 6px;">Системный журнал</div>
+                <div class="console-log" id="logBox"></div>
+            </div>
+        </main>
+
+        <nav class="nav-bar" id="navBar">
+            <button class="nav-tab market-main active" data-name="market" onclick="playSound('click'); switchTab('market', this)">Рынок</button>
+            <button class="nav-tab" data-name="cars" onclick="playSound('click'); switchTab('cars', this)">Авто</button>
+            <button class="nav-tab" data-name="apartments" onclick="playSound('click'); switchTab('apartments', this)">Жилье</button>
+            <button class="nav-tab" data-name="listings" onclick="playSound('click'); switchTab('listings', this)">Объявл.</button>
+            <button class="nav-tab" data-name="inventory" onclick="playSound('click'); switchTab('inventory', this)">Склад</button>
+            <button class="nav-tab" data-name="office" onclick="playSound('click'); switchTab('office', this)">Офис</button>
+        </nav>
+    </div>
+
+    <!-- МОДАЛКА МЕССЕНДЖЕРА «ПЕЛИГРАМ» -->
+    <div id="peligramModal" class="modal-overlay">
+        <div class="modal-box" style="max-height: 80vh; overflow-y: auto;">
+            <div class="pane-header" style="display:flex; justify-content:space-between; align-items:center;">
+                <span>Пелиграм // Чаты</span>
+                <button class="btn btn-secondary" style="padding: 4px 8px; font-size:10px;" onclick="closePeligramModal()">Закрыть</button>
+            </div>
+            <div id="peligramChatsList" style="display:flex; flex-direction:column; gap:8px;"></div>
+        </div>
+    </div>
+
+    <!-- МОДАЛКА ТУТОРИАЛА -->
+    <div id="tutorialModal" class="modal-overlay">
+        <div class="modal-box">
+            <div class="pane-header">Обучение // Добро пожаловать!</div>
+            <p id="tutorialText" style="font-size: 12px; line-height: 1.5; color: var(--text-muted);">
+                Шаг 1: Добро пожаловать в «Товарку»! Ваша цель — превратить 12,000 ₽ в миллионное состояние.
+            </p>
+            <button class="btn btn-primary" style="padding: 12px;" onclick="playSound('click'); nextTutorialStep()">Далее</button>
+        </div>
+    </div>
+
+    <!-- МОДАЛКА КРЕДИТА -->
+    <div id="creditModal" class="modal-overlay">
+        <div class="modal-box">
+            <div class="pane-header">Подтверждение займа</div>
+            <p style="font-size: 12px; line-height: 1.5; color: var(--text-muted);">
+                Вы действительно хотите взять банковский кредит в размере **15,000 ₽**?<br><br>
+                Сумма к возврату составит: **19,000 ₽**.
+            </p>
+            <div style="display: flex; gap: 8px;">
+                <button class="btn btn-success" style="flex:1; padding: 12px;" onclick="playSound('cash'); confirmTakeCredit()">Подтвердить</button>
+                <button class="btn btn-secondary" style="flex:1; padding: 12px;" onclick="playSound('click'); closeCreditModal()">Отмена</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- МОДАЛКА НАСТРОЕК -->
+    <div id="settingsModal" class="modal-overlay">
+        <div class="modal-box">
+            <div class="pane-header">Настройки игры</div>
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span style="font-size: 12px; font-weight: 600;">Тема оформления</span>
+                <button class="btn btn-secondary" id="themeToggleBtn" onclick="playSound('click'); switchTheme()">Тёмная / Светлая</button>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span style="font-size: 12px; font-weight: 600;">Фоновая мелодия</span>
+                <button class="btn btn-primary" id="musicToggleBtn" onclick="toggleMusic()">Включить</button>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span style="font-size: 12px; font-weight: 600;">Звуковые эффекты</span>
+                <button class="btn btn-success" id="soundToggleBtn" onclick="toggleSoundFx()">Вкл / Выкл</button>
+            </div>
+
+            <button class="btn btn-danger" style="margin-top: 6px; padding: 12px;" onclick="resetProgress()">Сбросить прогресс</button>
+            <button class="btn btn-secondary" style="margin-top: 4px; padding: 12px;" onclick="playSound('click'); closeSettingsModal()">Закрыть</button>
+        </div>
+    </div>
+
+    <!-- МОДАЛКА ЦЕНЫ -->
+    <div id="priceModal" class="modal-overlay">
+        <div class="modal-box">
+            <div class="pane-header">Установка цены</div>
+            <p id="priceModalHint" style="font-size: 12px; color: var(--text-muted);">Введите желаемую сумму:</p>
+            <input type="number" id="customPriceInput" placeholder="Сумма в рублях">
+            <button class="btn btn-primary" style="padding: 12px;" onclick="playSound('success'); confirmCustomPrice()">Опубликовать</button>
+            <button class="btn btn-secondary" style="padding: 12px;" onclick="playSound('click'); closePriceModal()">Отмена</button>
+        </div>
+    </div>
+
+    <!-- ЧАТ С ПОКУПАТЕЛЕМ -->
+    <div id="chatModal" class="modal-overlay" style="z-index: 150;">
+        <div class="chat-box">
+            <div class="chat-header">
+                <div class="chat-user-info">
+                    <span id="chatBuyerName" class="buyer-name">Покупатель</span>
+                    <span id="chatBuyerType" class="buyer-tag">Скупщик</span>
+                </div>
+                <button class="btn btn-secondary" style="padding: 4px 8px; font-size:10px;" onclick="closeChatModal()">Назад</button>
+            </div>
+            <div class="chat-messages" id="chatMessages"></div>
+            <div class="chat-controls" id="chatControls"></div>
+        </div>
+    </div>
+
+    <!-- ПРАВИЛА -->
+    <div id="aboutModal" class="modal-overlay">
+        <div class="modal-box">
+            <div class="pane-header">Правила игры</div>
+            <p style="font-size: 12px; line-height: 1.5; color: var(--text-muted);">
+                1. Зарабатывайте на перепродаже.<br>
+                2. Ремонтируйте товары, чтобы повысить их ценность.<br>
+                3. При 100 000 ₽ откройте Бизнес в Офисе.<br>
+                4. Сообщения приходят в «Пелиграм» (иконка самолетика сверху справа).<br>
+                5. Игра сохраняется автоматически.
+            </p>
+            <button class="btn btn-secondary" style="padding: 12px;" onclick="playSound('click'); toggleAbout()">Закрыть</button>
+        </div>
+    </div>
+
+    <script>
+        let audioCtx = null;
+        let musicInterval = null;
+        let isMusicPlaying = false;
+        let soundFxEnabled = true;
+
+        const tabsOrder = ['market', 'cars', 'apartments', 'listings', 'inventory', 'office'];
+        let currentTabIndex = 0;
+
+        let tutorialStep = 0;
+        const tutorialSteps = [
+            "Шаг 1: Добро пожаловать в «Товарку»! Ваша цель — превратить 12,000 ₽ в миллионное состояние.",
+            "Шаг 2: Перейдите на вкладку «Рынок» или «Авто», чтобы купить товар или подержанную машину.",
+            "Шаг 3: На «Складе» вы можете отремонтировать вещь и выставить её на продажу. Уведомления и чаты ищите в «Пелиграме» сверху справа!",
+            "Шаг 4: Накопив 100 000 ₽, откройте собственный Бизнес в «Офисе», чтобы получать пассивный доход! Удачи!"
+        ];
+
+        let touchStartX = 0;
+        let touchEndX = 0;
+
+        const viewportArea = document.getElementById('viewportArea');
+        viewportArea.addEventListener('touchstart', e => {
+            touchStartX = e.changedTouches[0].screenX;
+        }, {passive: true});
+
+        viewportArea.addEventListener('touchend', e => {
+            touchEndX = e.changedTouches[0].screenX;
+            handleSwipe();
+        }, {passive: true});
+
+        function handleSwipe() {
+            let swipeThreshold = 50;
+            if (touchEndX < touchStartX - swipeThreshold) {
+                if (currentTabIndex < tabsOrder.length - 1) {
+                    currentTabIndex++;
+                    activateTabByIndex(currentTabIndex);
+                }
+            }
+            if (touchEndX > touchStartX + swipeThreshold) {
+                if (currentTabIndex > 0) {
+                    currentTabIndex--;
+                    activateTabByIndex(currentTabIndex);
+                }
+            }
+        }
+
+        function activateTabByIndex(index) {
+            let tabName = tabsOrder[index];
+            let btnElement = document.querySelector(`.nav-tab[data-name="${tabName}"]`);
+            if (btnElement) {
+                playSound('click');
+                switchTab(tabName, btnElement);
+            }
+        }
+
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+
+        function openSettingsModal() { document.getElementById('settingsModal').style.display = 'flex'; }
+        function closeSettingsModal() { document.getElementById('settingsModal').style.display = 'none'; }
+
+        function toggleMusic() {
+            initAudio();
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            isMusicPlaying = !isMusicPlaying;
+            let btn = document.getElementById('musicToggleBtn');
+            if (isMusicPlaying) {
+                btn.innerText = "Выключить";
+                btn.className = "btn btn-danger";
+                startAmbientMusic();
+                playSound('click');
+            } else {
+                btn.innerText = "Включить";
+                btn.className = "btn btn-primary";
+                stopAmbientMusic();
+                playSound('click');
+            }
+        }
+
+        function toggleSoundFx() {
+            soundFxEnabled = !soundFxEnabled;
+            let btn = document.getElementById('soundToggleBtn');
+            btn.innerText = soundFxEnabled ? "Включено" : "Выключено";
+            btn.className = soundFxEnabled ? "btn btn-success" : "btn btn-secondary";
+            if (soundFxEnabled) playSound('click');
+        }
+
+        function startAmbientMusic() {
+            if (musicInterval) clearInterval(musicInterval);
+            const bassNotes = [110.00, 123.47, 146.83, 164.81]; 
+            let step = 0;
+            
+            musicInterval = setInterval(() => {
+                if (!isMusicPlaying || !audioCtx) return;
+                try {
+                    let now = audioCtx.currentTime;
+                    let osc = audioCtx.createOscillator();
+                    let gain = audioCtx.createGain();
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(bassNotes[step % bassNotes.length], now);
+                    gain.gain.setValueAtTime(0.04, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
+
+                    let filter = audioCtx.createBiquadFilter();
+                    filter.type = 'lowpass';
+                    filter.frequency.setValueAtTime(400, now);
+
+                    osc.connect(filter);
+                    filter.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start(now);
+                    osc.stop(now + 0.45);
+                    step++;
+                } catch(e) {}
+            }, 600);
+        }
+
+        function stopAmbientMusic() {
+            if (musicInterval) { clearInterval(musicInterval); musicInterval = null; }
+        }
+
+        function playSound(type) {
+            if (!soundFxEnabled) return;
+            try {
+                initAudio();
+                if (!audioCtx) return;
+                let osc = audioCtx.createOscillator();
+                let gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                let now = audioCtx.currentTime;
+
+                if (type === 'click') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(320, now);
+                    osc.frequency.exponentialRampToValueAtTime(120, now + 0.04);
+                    gain.gain.setValueAtTime(0.08, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
+                    osc.start(now); osc.stop(now + 0.04);
+                } else if (type === 'success') {
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(440, now);
+                    osc.frequency.setValueAtTime(554.37, now + 0.06);
+                    gain.gain.setValueAtTime(0.1, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+                    osc.start(now); osc.stop(now + 0.25);
+                } else if (type === 'cash') {
+                    osc.type = 'square';
+                    osc.frequency.setValueAtTime(987.77, now);
+                    osc.frequency.setValueAtTime(1318.51, now + 0.08);
+                    gain.gain.setValueAtTime(0.12, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+                    osc.start(now); osc.stop(now + 0.3);
+                } else if (type === 'notification') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(587.33, now);
+                    osc.frequency.setValueAtTime(880.00, now + 0.12);
+                    gain.gain.setValueAtTime(0.1, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+                    osc.start(now); osc.stop(now + 0.25);
+                } else if (type === 'repair') {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(180, now);
+                    osc.frequency.exponentialRampToValueAtTime(60, now + 0.08);
+                    gain.gain.setValueAtTime(0.09, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+                    osc.start(now); osc.stop(now + 0.08);
+                }
+            } catch (e) {}
+        }
+
+        const iconsLib = {
+            phone: '<svg viewBox="0 0 24 24"><path d="M17 1.01L7 1c-1.1 0-2 .9-2 2v18c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2V3c0-1.1-.9-1.99-2-1.99zM17 19H7V5h10v14z"/></svg>',
+            console: '<svg viewBox="0 0 24 24"><path d="M21 6H3c-1.1 0-2 .9-2 2v8c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm-10 9H8v3H6v-3H3v-2h3V8h2v3h3v2z"/></svg>',
+            laptop: '<svg viewBox="0 0 24 24"><path d="M20 18c1.1 0 1.99-.9 1.99-2L22 5c0-1.1-.9-2-2-2H4c-1.1 0-2 .9-2 2v11c0 1.1.9 2 2 2H0v2h24v-2h-4zM4 5h16v11H4V5z"/></svg>',
+            carDirty: '<svg viewBox="0 0 24 24" fill="#FF3D00"><path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.22.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.85 7h10.29l1.04 3H5.81l1.04-3z"/></svg>',
+            carClean: '<svg viewBox="0 0 24 24" fill="#00C853"><path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.22.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.85 7h10.29l1.04 3H5.81l1.04-3z"/></svg>',
+            apartment: '<svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>'
+        };
+
+        let defaultGameTemplate = {
+            balance: 12000,
+            day: 1,
+            inventory: [],
+            listings: [],
+            marketItems: [],
+            carsMarket: [],
+            apartmentsMarket: [],
+            log: [],
+            hasCredit: false,
+            creditAmount: 0,
+            businessOpened: false,
+            businessLevel: 0,
+            tutorialCompleted: false,
+            chats: []
+        };
+
+        let game = JSON.parse(JSON.stringify(defaultGameTemplate));
+
+        const techTemplates = [
+            { name: "Грушафон 15 Pro Max", baseValue: 45000, maxResell: 75000, defect: "Заблокирован на Pear ID", icon: iconsLib.phone },
+            { name: "Смартфон Pokо X4 Pro", baseValue: 6500, maxResell: 10500, defect: "Греется как утюг", icon: iconsLib.phone },
+            { name: "Консоль ПароПлашка OLED", baseValue: 29000, maxResell: 43000, defect: "Люфтят стики и дрифт", icon: iconsLib.console },
+            { name: "Ноутбук МысльПад T480", baseValue: 7500, maxResell: 12000, defect: "Залита клавиатура", icon: iconsLib.laptop },
+            { name: "ИгроСтанция 5 Slime", baseValue: 32000, maxResell: 48000, defect: "Гудит как турбина", icon: iconsLib.console }
+        ];
+
+        const carTemplates = [
+            { name: "ТАЗ 2107 «Семёрка»", baseValue: 32000, maxResell: 55000, defect: "Гнилые пороги, стучит клапан" },
+            { name: "БМВ Э34 «Легенда»", baseValue: 130000, maxResell: 210000, defect: "Ест масло 2L/100km, дымит" },
+            { name: "Мерин W124 «Кабанчик»", baseValue: 180000, maxResell: 290000, defect: "Проблемы с KE-Jetronic" }
+        ];
+
+        const apartmentTemplates = [
+            { name: "Конура 18м² (Окраина)", baseValue: 750000, maxResell: 1050000, defect: "Без ремонта, старые окна", icon: iconsLib.apartment },
+            { name: "Бабушкин вариант (Хрущ)", baseValue: 1350000, maxResell: 1850000, defect: "Запах кошек, под замену всё", icon: iconsLib.apartment }
+        ];
+
+        let activeChatId = null;
+        let toastTimeout = null;
+
+        function saveGame() {
+            localStorage.setItem('tovarka_save_v626', JSON.stringify(game));
+            updatePeligramBadge();
+        }
+
+        function loadGame() {
+            let saved = localStorage.getItem('tovarka_save_v626');
+            if (saved) {
+                try {
+                    game = JSON.parse(saved);
+                    if (!game.chats) game.chats = [];
+                    return true;
+                } catch(e) {}
+            }
+            return false;
+        }
+
+        function hasSavedGame() {
+            return localStorage.getItem('tovarka_save_v626') !== null;
+        }
+
+        function resetProgress() {
+            if (confirm("Вы уверены, что хотите сбросить весь прогресс?")) {
+                localStorage.removeItem('tovarka_save_v626');
+                location.reload();
+            }
+        }
+
+        function initMenuScreen() {
+            let container = document.getElementById('menuOptionsContainer');
+            container.innerHTML = '';
+            let hasSave = hasSavedGame();
+
+            if (hasSave) {
+                container.innerHTML += `<button class="btn btn-primary" style="padding: 14px; font-size: 13px;" onclick="playSound('click'); continueGame()">ПРОДОЛЖИТЬ</button>`;
+                container.innerHTML += `<button class="btn btn-secondary" style="padding: 14px; font-size: 13px;" onclick="playSound('click'); startNewGame()">НАЧАТЬ ЗАНОВО</button>`;
+            } else {
+                container.innerHTML += `<button class="btn btn-primary" style="padding: 14px; font-size: 13px;" onclick="playSound('click'); startNewGame()">НАЧАТЬ ИГРУ</button>`;
+            }
+
+            container.innerHTML += `<button class="btn btn-secondary" style="padding: 14px; font-size: 13px;" onclick="playSound('click'); openSettingsModal()">НАСТРОЙКИ</button>`;
+            container.innerHTML += `<button class="btn btn-secondary" style="padding: 14px; font-size: 13px;" onclick="playSound('click'); toggleAbout()">ПРАВИЛА</button>`;
+        }
+
+        window.onload = function() {
+            initMenuScreen();
+        };
+
+        function continueGame() {
+            loadGame();
+            enterGameInterface(false);
+        }
+
+        function startNewGame() {
+            if (hasSavedGame()) {
+                if (!confirm("Текущий сохраненный прогресс будет стерт. Начать новую игру?")) return;
+            }
+            localStorage.removeItem('tovarka_save_v626');
+            game = JSON.parse(JSON.stringify(defaultGameTemplate));
+            initMarketsFresh();
+            enterGameInterface(true);
+        }
+
+        function enterGameInterface(isNew) {
+            document.getElementById('screen-menu').classList.remove('active');
+            document.getElementById('game-interface').classList.add('visible');
+            updateUI();
+            playSound('success');
+
+            if (isNew) {
+                document.getElementById('tutorialModal').style.display = 'flex';
+            } else {
+                addLog("Сессия загружена. Добро пожаловать обратно!");
+            }
+        }
+
+        function switchTheme() {
+            let html = document.documentElement;
+            let currentTheme = html.getAttribute('data-theme');
+            let newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', newTheme);
+        }
+
+        function nextTutorialStep() {
+            tutorialStep++;
+            if (tutorialStep < tutorialSteps.length) {
+                document.getElementById('tutorialText').innerText = tutorialSteps[tutorialStep];
+            } else {
+                document.getElementById('tutorialModal').style.display = 'none';
+                game.tutorialCompleted = true;
+                saveGame();
+                addLog("Обучение завершено. Успешной торговли!");
+            }
+        }
+
+        function toggleAbout() {
+            let modal = document.getElementById('aboutModal');
+            modal.style.display = modal.style.display === 'flex' ? 'none' : 'flex';
+        }
+
+        function switchTab(tabName, btnElement) {
+            currentTabIndex = tabsOrder.indexOf(tabName);
+            document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.nav-tab').forEach(b => b.classList.remove('active'));
+
+            document.getElementById('tab-' + tabName).classList.add('active');
+            btnElement.classList.add('active');
+
+            if (tabName === 'market') renderMarket(game.marketItems, 'market-list', true);
+            if (tabName === 'cars') renderMarket(game.carsMarket, 'cars-list', false);
+            if (tabName === 'apartments') renderMarket(game.apartmentsMarket, 'apartments-list', false);
+            if (tabName === 'inventory') renderInventory();
+            if (tabName === 'listings') renderListings();
+            if (tabName === 'office') renderBusinessUI();
+        }
+
+        function addLog(text) {
+            game.log.unshift(`[День ${game.day}] ${text}`);
+            let box = document.getElementById('logBox');
+            if (box) box.innerHTML = game.log.join('<br>');
+            saveGame();
+        }
+
+        function updateUI() {
+            document.getElementById('balance').innerText = game.balance.toLocaleString() + ' ₽';
+            document.getElementById('day').innerText = game.day;
+            document.getElementById('inv-count').innerText = game.inventory.length;
+            document.getElementById('listings-count').innerText = game.listings.length;
+
+            let status = "ПЕРЕКУП";
+            if (game.balance >= 100000 && !game.businessOpened) status = "БОГАТЕЙ";
+            if (game.businessOpened) status = "БИЗНЕСМЕН";
+            if (game.balance >= 1000000) status = "МИЛЛИОНЕР";
+            document.getElementById('statusLevel').innerText = status;
+
+            let creditBtn = document.getElementById('creditBtn');
+            if (game.hasCredit) {
+                creditBtn.innerText = "Погасить";
+                creditBtn.onclick = payCredit;
+            } else {
+                creditBtn.innerText = "Взять";
+                creditBtn.onclick = handleCreditAction;
+            }
+
+            renderBusinessUI();
+            updatePeligramBadge();
+            saveGame();
+        }
+
+        function updatePeligramBadge() {
+            let badge = document.getElementById('peligramBadge');
+            let hasUnread = game.chats.some(c => !c.isRead);
+            badge.style.display = hasUnread ? 'block' : 'none';
+        }
+
+        function renderBusinessUI() {
+            let titleBox = document.getElementById('businessTitle');
+            let descBox = document.getElementById('businessDesc');
+            let btn = document.getElementById('openBusinessBtn');
+
+            if (!game.businessOpened) {
+                titleBox.innerText = "Коммерческий Бизнес";
+                descBox.innerText = "Статус: Закрыт. Порог входа: 100,000 ₽. Расходы склада: 0 ₽.";
+                btn.innerText = "Открыть (100k ₽)";
+                btn.disabled = game.balance < 100000;
+            } else {
+                let dailyIncome = game.businessLevel * 2500;
+                titleBox.innerText = `Бизнес [Уровень ${game.businessLevel}]`;
+                descBox.innerText = `Пассивный доход: +${dailyIncome.toLocaleString()} ₽/день.`;
+                
+                let nextCost = (game.businessLevel + 1) * 75000;
+                btn.innerText = `Прокачать (${nextCost.toLocaleString()} ₽)`;
+                btn.disabled = game.balance < nextCost;
+            }
+        }
+
+        function handleBusinessAction() {
+            if (!game.businessOpened) {
+                if (game.balance >= 100000) {
+                    game.balance -= 100000;
+                    game.businessOpened = true;
+                    game.businessLevel = 1;
+                    addLog("Поздравляем! Вы официально открыли собственный Бизнес!");
+                    updateUI();
+                }
+            } else {
+                let nextCost = (game.businessLevel + 1) * 75000;
+                if (game.balance >= nextCost) {
+                    game.balance -= nextCost;
+                    game.businessLevel++;
+                    addLog(`Бизнес успешно развит до Уровня ${game.businessLevel}!`);
+                    updateUI();
+                }
+            }
+        }
+
+        function initMarketsFresh() {
+            game.marketItems = makeDynamicBatch(techTemplates, false);
+            game.carsMarket = makeDynamicBatch(carTemplates, true);
+            game.apartmentsMarket = makeDynamicBatch(apartmentTemplates, false);
+            saveGame();
+        }
+
+        function updateMarketsDaily() {
+            advanceMarketItems(game.marketItems);
+            advanceMarketItems(game.carsMarket);
+            advanceMarketItems(game.apartmentsMarket);
+
+            addNewItemsToMarket(game.marketItems, techTemplates, false);
+            addNewItemsToMarket(game.carsMarket, carTemplates, true);
+            addNewItemsToMarket(game.apartmentsMarket, apartmentTemplates, false);
+            
+            saveGame();
+        }
+
+        function advanceMarketItems(arr) {
+            for (let i = arr.length - 1; i >= 0; i--) {
+                arr[i].daysLeft--;
+                if (arr[i].daysLeft <= 0) {
+                    arr.splice(i, 1);
+                }
+            }
+        }
+
+        function addNewItemsToMarket(arr, templatesArr, isCarType) {
+            let newCount = Math.floor(Math.random() * 8) + 3;
+            for (let i = 0; i < newCount; i++) {
+                let template = templatesArr[Math.floor(Math.random() * templatesArr.length)];
+                let factor = Math.random() * 0.3 + 0.85;
+                let price = Math.floor(template.baseValue * factor);
+                let resell = Math.floor(template.maxResell * factor);
+                let repairCost = Math.floor(price * 0.25);
+                let itemIcon = isCarType ? iconsLib.carDirty : template.icon;
+                let daysLife = Math.floor(Math.random() * 2) + 2;
+
+                arr.push({
+                    id: Math.random(),
+                    name: template.name,
+                    icon: itemIcon,
+                    price: price,
+                    resellPrice: resell,
+                    repairCost: repairCost,
+                    defect: template.defect,
+                    isRepaired: false,
+                    isCar: isCarType,
+                    daysLeft: daysLife
+                });
+            }
+        }
+
+        function makeDynamicBatch(templatesArr, isCarType) {
+            let items = [];
+            let count = Math.floor(Math.random() * 6) + 4;
+            for (let i = 0; i < count; i++) {
+                let template = templatesArr[Math.floor(Math.random() * templatesArr.length)];
+                let factor = Math.random() * 0.3 + 0.85;
+                let price = Math.floor(template.baseValue * factor);
+                let resell = Math.floor(template.maxResell * factor);
+                let repairCost = Math.floor(price * 0.25);
+                let itemIcon = isCarType ? iconsLib.carDirty : template.icon;
+                let daysLife = Math.floor(Math.random() * 2) + 2;
+
+                items.push({
+                    id: Math.random(),
+                    name: template.name,
+                    icon: itemIcon,
+                    price: price,
+                    resellPrice: resell,
+                    repairCost: repairCost,
+                    defect: template.defect,
+                    isRepaired: false,
+                    isCar: isCarType,
+                    daysLeft: daysLife
+                });
+            }
+            return items;
+        }
+
+        function renderMarket(itemsArr, elementId, isFeatured) {
+            let list = document.getElementById(elementId);
+            list.innerHTML = '';
+            
+            if (itemsArr.length === 0) {
+                list.innerHTML = `<div class="shop-card"><div class="card-desc" style="text-align:center; width:100%;">Рынок пуст. Ждите обновления на следующий день.</div></div>`;
+                return;
+            }
+
+            itemsArr.forEach((item, index) => {
+                let cardClass = isFeatured ? "shop-card featured-market" : "shop-card";
+                let defectColor = item.isCar ? "color:var(--accent-red);" : "";
+                let defectText = item.isCar ? `Состояние: Ржавое / ${item.defect}` : `Дефект: ${item.defect}`;
+                let expireInfo = ` [Срок: сгорит через ${item.daysLeft} дн.]`;
+
+                list.innerHTML += `
+                    <div class="${cardClass}">
+                        <div class="card-icon-box">${item.icon}</div>
+                        <div class="card-info">
+                            <div class="card-title">${item.name}</div>
+                            <div class="card-desc" style="${defectColor}">${defectText} <span style="font-size:9px; color:var(--text-muted);">${expireInfo}</span></div>
+                            <div class="card-price">${item.price.toLocaleString()} ₽</div>
+                        </div>
+                        <div class="card-actions">
+                            <button class="btn btn-primary" onclick="playSound('click'); buyItem('${elementId}', ${index})">Купить</button>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function buyItem(marketType, index) {
+            let arr = marketType === 'market-list' ? game.marketItems : (marketType === 'cars-list' ? game.carsMarket : game.apartmentsMarket);
+            let item = arr[index];
+
+            if (game.balance < item.price) {
+                alert('Недостаточно средств!');
+                return;
+            }
+            game.balance -= item.price;
+            game.inventory.push(item);
+            arr.splice(index, 1);
+            playSound('success');
+            addLog(`Приобретено: ${item.name} за ${item.price.toLocaleString()} ₽`);
+            updateUI();
+            switchTab(marketType === 'market-list' ? 'market' : (marketType === 'cars-list' ? 'cars' : 'apartments'), document.querySelector('.nav-tab.active'));
+        }
+
+        function renderInventory() {
+            let list = document.getElementById('inventory-list');
+            list.innerHTML = '';
+
+            if (game.inventory.length === 0) {
+                list.innerHTML = `<div class="shop-card"><div class="card-desc" style="text-align:center; width:100%;">Склад пуст.</div></div>`;
+                return;
+            }
+
+            game.inventory.forEach((item, index) => {
+                let status = item.isRepaired ? (item.isCar ? 'Обслужено (Без ржавчины)' : 'Отремонтировано') : 'Требует вложений';
+                let estVal = item.isRepaired ? item.resellPrice : Math.floor(item.resellPrice * 0.6);
+
+                list.innerHTML += `
+                    <div class="shop-card">
+                        <div class="card-icon-box">${item.icon}</div>
+                        <div class="card-info">
+                            <div class="card-title">${item.name}</div>
+                            <div class="card-desc">${status} | Оценка: ~${estVal.toLocaleString()} ₽</div>
+                        </div>
+                        <div class="card-actions">
+                            ${!item.isRepaired ? `<button class="btn btn-secondary" onclick="playSound('repair'); repairItem(${index})">Ремонт (${item.repairCost}₽)</button>` : ''}
+                            <button class="btn btn-primary" onclick="playSound('click'); openPriceModal(${index})">Продать</button>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function repairItem(index) {
+            let item = game.inventory[index];
+            if (game.balance < item.repairCost) {
+                alert('Недостаточно средств!');
+                return;
+            }
+            game.balance -= item.repairCost;
+            item.isRepaired = true;
+            item.resellPrice = Math.floor(item.resellPrice * 1.5);
+            
+            if (item.isCar) {
+                item.icon = iconsLib.carClean;
+            }
+
+            addLog(`Проведен ремонт: ${item.name} за ${item.repairCost} ₽`);
+            updateUI();
+            renderInventory();
+        }
+
+        function openPriceModal(index) {
+            selectedItemIndexForSale = index;
+            let item = game.inventory[index];
+            let recPrice = item.isRepaired ? item.resellPrice : Math.floor(item.resellPrice * 0.6);
+            
+            document.getElementById('priceModalHint').innerText = `Рекомендованная цена: ~${recPrice.toLocaleString()} ₽`;
+            document.getElementById('customPriceInput').value = recPrice;
+            document.getElementById('priceModal').style.display = 'flex';
+        }
+
+        function closePriceModal() {
+            document.getElementById('priceModal').style.display = 'none';
+            selectedItemIndexForSale = null;
+        }
+
+        function confirmCustomPrice() {
+            let priceVal = parseInt(document.getElementById('customPriceInput').value);
+            if (isNaN(priceVal) || priceVal <= 0) {
+                alert('Введите корректную сумму.');
+                return;
+            }
+
+            let item = game.inventory[selectedItemIndexForSale];
+            game.inventory.splice(selectedItemIndexForSale, 1);
+
+            let newListing = {
+                id: Math.random(),
+                item: item,
+                askingPrice: priceVal
+            };
+
+            game.listings.push(newListing);
+            playSound('success');
+            addLog(`Объявление создано: ${item.name} за ${priceVal.toLocaleString()} ₽`);
+            closePriceModal();
+            updateUI();
+            renderInventory();
+
+            if (Math.random() < 0.5) {
+                let listingIndex = game.listings.length - 1;
+                setTimeout(() => {
+                    generateBuyerMessage(game.listings[listingIndex], listingIndex);
+                }, 500);
+            }
+        }
+
+        function renderListings() {
+            let list = document.getElementById('listings-list');
+            list.innerHTML = '';
+
+            if (game.listings.length === 0) {
+                list.innerHTML = `<div class="shop-card"><div class="card-desc" style="text-align:center; width:100%;">Нет активных объявлений.</div></div>`;
+                return;
+            }
+
+            game.listings.forEach((listing, index) => {
+                list.innerHTML += `
+                    <div class="shop-card">
+                        <div class="card-icon-box">${listing.item.icon}</div>
+                        <div class="card-info">
+                            <div class="card-title">${listing.item.name}</div>
+                            <div class="card-price">${listing.askingPrice.toLocaleString()} ₽</div>
+                        </div>
+                        <div class="card-actions">
+                            <button class="btn btn-secondary" onclick="playSound('click'); removeListing(${index})">Снять</button>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function removeListing(index) {
+            let listing = game.listings[index];
+            game.inventory.push(listing.item);
+            game.listings.splice(index, 1);
+            addLog(`Объявление снято: ${listing.item.name}`);
+            updateUI();
+            renderListings();
+        }
+
+        function handleCreditAction() {
+            if (game.hasCredit) {
+                payCredit();
+            } else {
+                document.getElementById('creditModal').style.display = 'flex';
+            }
+        }
+
+        function closeCreditModal() {
+            document.getElementById('creditModal').style.display = 'none';
+        }
+
+        function confirmTakeCredit() {
+            closeCreditModal();
+            game.hasCredit = true;
+            game.creditAmount = 19000;
+            game.balance += 15000;
+            addLog(`Взят заём 15,000 ₽. К возврату: 19,000 ₽.`);
+            updateUI();
+        }
+
+        function payCredit() {
+            if (game.balance < game.creditAmount) {
+                alert('Недостаточно средств для погашения кредита!');
+                return;
+            }
+            game.balance -= game.creditAmount;
+            game.hasCredit = false;
+            game.creditAmount = 0;
+            playSound('success');
+            addLog(`Кредит полностью погашен.`);
+            updateUI();
+        }
+
+        function nextDay() {
+            game.day++;
+
+            let upkeep = 0;
+            if (game.businessOpened) {
+                upkeep = game.balance >= 1000000 ? 1000 : 650;
+            }
+
+            let dailyBusinessIncome = game.businessOpened ? game.businessLevel * 2500 : 0;
+
+            game.balance += dailyBusinessIncome;
+            game.balance -= upkeep;
+
+            updateMarketsDaily();
+            playSound('click');
+            
+            let logMsg = `День ${game.day}. Новые товары поступили на рынок! `;
+            if (dailyBusinessIncome > 0) logMsg += `Прибыль бизнеса: +${dailyBusinessIncome.toLocaleString()} ₽. `;
+            if (upkeep > 0) logMsg += `Аренда склада: -${upkeep} ₽.`;
+            else logMsg += `Аренда склада: 0 ₽ (Бизнес не открыт).`;
+
+            addLog(logMsg);
+
+            if (game.listings.length > 0) {
+                let randomListingIndex = Math.floor(Math.random() * game.listings.length);
+                let listing = game.listings[randomListingIndex];
+                generateBuyerMessage(listing, randomListingIndex);
+            }
+
+            updateUI();
+            switchTab('market', document.querySelector('.nav-tab.market-main'));
+        }
+
+        function generateBuyerMessage(listing, index) {
+            let fairPrice = listing.item.isRepaired ? listing.item.resellPrice : Math.floor(listing.item.resellPrice * 0.6);
+            let isCrazy = listing.askingPrice > fairPrice * 1.8;
+
+            playSound('notification');
+            let randomNames = ["Тимур", "Иван", "Сергей", "Алексей", "Максим", "Рустам", "Дмитрий", "Евгений"];
+            let buyerName = randomNames[Math.floor(Math.random() * randomNames.length)];
+            
+            let offeredPrice = isCrazy ? 0 : Math.floor(listing.askingPrice * (Math.random() * 0.3 + 0.5));
+            let greeting = isCrazy 
+                ? `Вы с ума сошли за ${listing.askingPrice.toLocaleString()} ₽ это продавать? Реальная цена максимум ${fairPrice.toLocaleString()} ₽!`
+                : `Здравствуйте! Заинтересовал лот ${listing.item.name}. Заберу за ${offeredPrice.toLocaleString()} ₽.`;
+
+            let chatObj = {
+                id: 'chat_' + Math.floor(Math.random() * 1000000),
+                listingId: listing.id,
+                buyerName: buyerName,
+                targetPrice: listing.askingPrice,
+                offeredPrice: offeredPrice,
+                isCrazy: isCrazy,
+                stage: isCrazy ? 'CRAZY' : 'GREETING',
+                messages: [
+                    { sender: 'buyer', text: greeting }
+                ],
+                isRead: false
+            };
+
+            game.chats.push(chatObj);
+            saveGame();
+
+            showToast(buyerName, listing.item.name);
+        }
+
+        function showToast(buyerName, itemName) {
+            let toast = document.getElementById('toastNotification');
+            document.getElementById('toastText').innerText = `${buyerName} пишет по поводу «${itemName}»`;
+            toast.classList.add('show');
+
+            if (toastTimeout) clearTimeout(toastTimeout);
+            toastTimeout = setTimeout(() => {
+                toast.classList.remove('show');
+            }, 8000);
+        }
+
+        function openPeligramModal() {
+            document.getElementById('toastNotification').classList.remove('show');
+            let modal = document.getElementById('peligramModal');
+            let listContainer = document.getElementById('peligramChatsList');
+            listContainer.innerHTML = '';
+
+            if (!game.chats || game.chats.length === 0) {
+                listContainer.innerHTML = `<div style="text-align:center; padding: 20px; font-size:12px; color:var(--text-muted);">Нет новых сообщений. Выставьте товары на продажу!</div>`;
+            } else {
+                game.chats.forEach((chat) => {
+                    let unreadMark = !chat.isRead ? `<span style="color:var(--accent-green); font-weight:800;">• NEW</span>` : '';
+                    let listingObj = game.listings.find(l => l.id === chat.listingId);
+                    let itemName = listingObj ? listingObj.item.name : "Товар продан/снят";
+                    let iconMarkup = listingObj ? listingObj.item.icon : iconsLib.phone;
+
+                    listContainer.innerHTML += `
+                        <div class="shop-card" style="cursor:pointer;" onclick="openChat('${chat.id}')">
+                            <div class="card-icon-box">${iconMarkup}</div>
+                            <div class="card-info">
+                                <div class="card-title">${chat.buyerName} ${unreadMark}</div>
+                                <div class="card-desc">Лот: ${itemName}</div>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+
+            modal.style.display = 'flex';
+        }
+
+        function closePeligramModal() {
+            document.getElementById('peligramModal').style.display = 'none';
+        }
+
+        function openChat(chatId) {
+            document.getElementById('peligramModal').style.display = 'none';
+            
+            let chat = game.chats.find(c => c.id == chatId);
+            if (!chat) return;
+
+            activeChatId = chat.id;
+            chat.isRead = true;
+            saveGame();
+
+            let modal = document.getElementById('chatModal');
+            document.getElementById('chatBuyerName').innerText = chat.buyerName;
+            
+            let msgContainer = document.getElementById('chatMessages');
+            msgContainer.innerHTML = '';
+            
+            chat.messages.forEach(m => {
+                appendMessage(m.sender, m.text);
+            });
+
+            renderDialogueOptions();
+            modal.style.display = 'flex';
+        }
+
+        function closeChatModal() {
+            document.getElementById('chatModal').style.display = 'none';
+            activeChatId = null;
+            updateUI();
+            openPeligramModal();
+        }
+
+        function appendMessage(sender, text) {
+            let container = document.getElementById('chatMessages');
+            let div = document.createElement('div');
+            div.className = `msg ${sender}`;
+            div.innerText = text;
+            container.appendChild(div);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function createOption(text, callback, isSecondary = false) {
+            let controls = document.getElementById('chatControls');
+            let btn = document.createElement('button');
+            btn.className = isSecondary ? 'reply-btn btn-secondary' : 'reply-btn';
+            btn.style.width = '100%';
+            btn.innerText = text;
+            btn.onclick = callback;
+            controls.appendChild(btn);
+        }
+
+        function renderDialogueOptions() {
+            let controls = document.getElementById('chatControls');
+            controls.innerHTML = '';
+
+            let chat = game.chats.find(c => c.id == activeChatId);
+            if (!chat) return;
+
+            if (chat.isCrazy) {
+                createOption("Закрыть чат", () => { 
+                    playSound('click'); 
+                    closeChatModal(); 
+                }, true);
+                return;
+            }
+
+            if (chat.stage === 'GREETING') {
+                createOption("Приветствую! Готов обсудить сделку.", () => {
+                    playSound('click');
+                    appendMessage('seller', "Приветствую! Готов обсудить сделку.");
+                    chat.messages.push({ sender: 'seller', text: "Приветствую! Готов обсудить сделку." });
+                    saveGame();
+                    
+                    setTimeout(() => {
+                        let reply = `Отлично. Моя окончательная ставка — ${chat.offeredPrice.toLocaleString()} ₽. Соглашайтесь.`;
+                        appendMessage('buyer', reply);
+                        chat.messages.push({ sender: 'buyer', text: reply });
+                        chat.stage = 'FINAL_DECISION';
+                        saveGame();
+                        renderDialogueOptions();
+                    }, 600);
+                });
+
+                createOption("Цена окончательная, без торга.", () => {
+                    playSound('click');
+                    appendMessage('seller', "Цена окончательная, без торга.");
+                    chat.messages.push({ sender: 'seller', text: "Цена окончательная, без торга." });
+                    saveGame();
+                    
+                    setTimeout(() => {
+                        if (Math.random() > 0.5) {
+                            let reply = `Ладно, уговорили, заберу за вашу цену в ${chat.targetPrice.toLocaleString()} ₽!`;
+                            appendMessage('buyer', reply);
+                            chat.messages.push({ sender: 'buyer', text: reply });
+                            chat.offeredPrice = chat.targetPrice;
+                        } else {
+                            let reply = `Нет, за такую цену искать буду в другом месте. Удачи.`;
+                            appendMessage('buyer', reply);
+                            chat.messages.push({ sender: 'buyer', text: reply });
+                            chat.offeredPrice = 0;
+                        }
+                        chat.stage = 'FINAL_DECISION';
+                        saveGame();
+                        renderDialogueOptions();
+                    }, 600);
+                });
+            } 
+            else if (chat.stage === 'FINAL_DECISION') {
+                if (chat.offeredPrice > 0) {
+                    createOption(`Продать за ${chat.offeredPrice.toLocaleString()} ₽`, () => {
+                        playSound('cash');
+                        finalizeDeal(chat, chat.offeredPrice);
+                    });
+                }
+            }
+
+            createOption("Закрыть чат / Назад", () => { 
+                playSound('click'); 
+                closeChatModal(); 
+            }, true);
+        }
+
+        function finalizeDeal(chat, finalPrice) {
+            game.balance += finalPrice;
+            
+            let listingObj = game.listings.find(l => l.id === chat.listingId);
+            if (listingObj) {
+                addLog(`Успешная продажа: ${listingObj.item.name} за ${finalPrice.toLocaleString()} ₽`);
+            }
+
+            let listIdx = game.listings.findIndex(l => l.id === chat.listingId);
+            if (listIdx !== -1) game.listings.splice(listIdx, 1);
+
+            let chatIdx = game.chats.findIndex(c => c.id === chat.id);
+            if (chatIdx !== -1) game.chats.splice(chatIdx, 1);
+
+            activeChatId = null;
+            saveGame();
+
+            document.getElementById('chatModal').style.display = 'none';
+            updateUI();
+            openPeligramModal();
+        }
+    </script>
+</body>
+</html>
